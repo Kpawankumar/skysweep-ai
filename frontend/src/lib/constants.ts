@@ -1,9 +1,7 @@
-export const TEAM_NAME = 'Neural Ninjas United';
-
-export const HACKATHON = {
-  name: 'Bhartiya Antriksh Hackathon 2026',
-  problem: 'Problem Statement 2',
+export const PROJECT = {
+  name: 'SkySweep AI',
   title: 'Generative AI-Based Cloud Removal and Reconstruction for LISS-IV Satellite Imagery',
+  subtitle: 'Generative cloud removal framework for satellite imagery',
   region: 'North Eastern Region (NER), India',
 };
 

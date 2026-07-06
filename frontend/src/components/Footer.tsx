@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { HACKATHON, TEAM_NAME } from '@/lib/constants';
+import { PROJECT } from '@/lib/constants';
 
 export default function Footer() {
   return (
@@ -35,21 +35,19 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-emerald-500">Hackathon</h4>
+            <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-emerald-500">Project</h4>
             <ul className="space-y-2 text-sm text-emerald-100/60">
-              <li>{HACKATHON.name}</li>
-              <li>{HACKATHON.problem}</li>
+              <li>{PROJECT.name}</li>
+              <li>{PROJECT.subtitle}</li>
               <li className="text-emerald-400/80">LISS-IV · NER India</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-emerald-900/20 pt-8 sm:flex-row">
-          <p className="text-xs text-emerald-100/40">
-            © 2026 SkySweep AI · {HACKATHON.name}
-          </p>
+          <p className="text-xs text-emerald-100/40">© 2026 SkySweep AI</p>
           <p className="rounded-full border border-emerald-500/20 bg-emerald-900/20 px-4 py-2 text-xs font-semibold text-emerald-400">
-            Built by team {TEAM_NAME}
+            Built by Pawan Kumar
           </p>
         </div>
       </div>

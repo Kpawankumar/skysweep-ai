@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { HACKATHON, MODELS, DATASETS } from '@/lib/constants';
+import { PROJECT, MODELS, DATASETS } from '@/lib/constants';
 
 const OUTCOMES = [
   'Automated cloud-free reconstruction of LISS-IV imagery',
@@ -61,7 +61,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-5xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-900/20 px-4 py-1.5 text-xs font-semibold tracking-widest text-emerald-400 uppercase">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            {HACKATHON.name} · {HACKATHON.problem}
+            {PROJECT.name} · Cloud Removal Platform
           </div>
 
           <h1 className="mb-6 text-5xl font-black tracking-tighter sm:text-7xl lg:text-8xl">
@@ -76,7 +76,7 @@ export default function HomePage() {
             <span className="font-semibold text-emerald-400">LISS-IV Satellite Imagery</span>
           </p>
           <p className="mx-auto mb-10 max-w-2xl text-sm text-emerald-100/50">
-            Revealing ground truth beneath persistent cloud cover over the {HACKATHON.region} using
+            Revealing ground truth beneath persistent cloud cover over the {PROJECT.region} using
             spatial, spectral, and temporal deep learning fusion.
           </p>
 
@@ -117,7 +117,7 @@ export default function HomePage() {
       <section className="border-t border-emerald-900/30 bg-gradient-to-b from-[#0a110d] to-[#050806] py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-500">Problem Statement</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-500">Project Overview</p>
             <h2 className="text-3xl font-black text-emerald-50 sm:text-4xl">The Cloud Cover Challenge</h2>
           </div>
 
@@ -228,7 +228,7 @@ export default function HomePage() {
           <div className="grid gap-12 lg:grid-cols-2">
             <div>
               <p className="mb-2 text-xs font-bold uppercase tracking-widest text-emerald-500">Expected Outcomes</p>
-              <h2 className="mb-8 text-3xl font-black text-emerald-50">Hackathon Deliverables</h2>
+              <h2 className="mb-8 text-3xl font-black text-emerald-50">Project Deliverables</h2>
               <ul className="space-y-4">
                 {OUTCOMES.map((o, i) => (
                   <li key={o} className="flex items-start gap-3">

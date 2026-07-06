@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'SkySweep AI — LISS-IV Cloud Removal Framework',
   description:
-    'Generative AI-based cloud removal and reconstruction for LISS-IV satellite imagery. Bhartiya Antriksh Hackathon 2026 — Team Neural Ninjas United.',
+    'Generative AI-based cloud removal and reconstruction for LISS-IV satellite imagery.',
   keywords: ['LISS-IV', 'cloud removal', 'satellite imagery', 'Generative AI', 'NER India', 'ISRO'],
 };
 

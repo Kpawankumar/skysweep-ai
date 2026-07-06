@@ -26,7 +26,7 @@ U-Net Attention Baseline
 
 📱 Frontend Pages
 
-Home — Problem statement, datasets, expected outcomes, and hackathon context
+Home — Project overview, datasets, expected outcomes, and platform context
 
 Workspace — Upload LISS-IV/SAR imagery, select GenAI model, run reconstruction, export GeoTIFF
 
@@ -99,7 +99,7 @@ uvicorn main:app --reload
 
 📖 How to Use the Dashboard
 
-Home Page: Overview of the problem statement, datasets, and expected outcomes for Bhartiya Antriksh Hackathon 2026.
+Home Page: Overview of the project, datasets, and expected outcomes for SkySweep AI.
 
 Enter Workspace: Navigate to "Workspace" or click "Launch Reconstruction Engine".
 
@@ -115,7 +115,7 @@ Explore Further: Visit Preprocessing, Models, Evaluation, and Workflow pages for
 
 👥 Team
 
-Built by team Neural Ninjas United — Bhartiya Antriksh Hackathon 2026
+Built by the SkySweep AI team
 
 🤝 Contributing
 

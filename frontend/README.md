@@ -2,13 +2,13 @@
 
 Interactive dashboard for **Generative AI-Based Cloud Removal and Reconstruction for LISS-IV Satellite Imagery**.
 
-Built for **Bhartiya Antriksh Hackathon 2026** (Problem Statement 2) by **Team Neural Ninjas United**.
+Built as a generic SkySweep AI platform for cloud removal and reconstruction workflows.
 
 ## Pages
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page — problem statement, datasets, expected outcomes, model highlights |
+| `/` | Landing page — project overview, datasets, expected outcomes, model highlights |
 | `/workspace` | Main reconstruction engine — upload LISS-IV/SAR, select GenAI model, run pipeline, compare results |
 | `/preprocessing` | Interactive data pipeline — ingestion, cloud masks, co-registration, patch extraction |
 | `/models` | Comparative benchmark of 6 GenAI architectures (Diffusion, GANs, Transformers, CNN) |
@@ -82,7 +82,7 @@ frontend/src/
 
 Recommended pages to capture:
 
-1. **Landing page** (`/`) — hero section with hackathon badge and stats
+1. **Landing page** (`/`) — hero section with project badge and stats
 2. **Workspace** (`/workspace`) — upload panel + spatial render canvas with results
 3. **Models** (`/models`) — architecture comparison with SSIM bar chart
 4. **Evaluation** (`/evaluation`) — metrics grid + before/after swipe comparison
@@ -90,4 +90,4 @@ Recommended pages to capture:
 
 ---
 
-Built by team **Neural Ninjas United**
+Built for the SkySweep AI platform
