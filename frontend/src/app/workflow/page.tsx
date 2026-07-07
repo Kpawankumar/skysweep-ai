@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { WORKFLOW_STEPS } from '@/lib/constants';
+import { useEffect, useState } from 'react';
+import { fetchWorkflowPhases } from '@/lib/api';
+import type { WorkflowPhase } from '@/lib/types';
 
 const TECH_STACK = [
   { category: 'Deep Learning', items: ['PyTorch', 'TensorFlow', 'torchvision'] },
@@ -11,6 +13,12 @@ const TECH_STACK = [
 ];
 
 export default function WorkflowPage() {
+  const [workflow, setWorkflow] = useState<WorkflowPhase[]>([]);
+
+  useEffect(() => {
+    fetchWorkflowPhases().then(setWorkflow).catch(() => setWorkflow([]));
+  }, []);
+
   return (
     <div className="relative min-h-[calc(100vh-8rem)]">
       <div className="hero-gradient pointer-events-none absolute inset-0" />
@@ -26,7 +34,7 @@ export default function WorkflowPage() {
 
         {/* Workflow phases */}
         <div className="mb-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {WORKFLOW_STEPS.map((phase, i) => (
+          {workflow.map((phase, i) => (
             <div key={phase.phase} className="glass-card relative rounded-2xl p-6">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600/20 text-sm font-black text-emerald-400">
                 {i + 1}
@@ -40,7 +48,7 @@ export default function WorkflowPage() {
                   </li>
                 ))}
               </ol>
-              {i < WORKFLOW_STEPS.length - 1 && (
+              {i < workflow.length - 1 && (
                 <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-emerald-600 lg:block">→</div>
               )}
             </div>

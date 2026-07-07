@@ -1,0 +1,94 @@
+{
+  "job_id": "fc296e076b1e4a79b61c61fdffa02d66",
+  "created_at": "2026-07-07T12:52:33.092098+00:00",
+  "request": {
+    "optical_filename": "demo_image_for_evaluation.png",
+    "sar_filename": "demo_image_for_evaluation.png",
+    "reference_filename": null,
+    "model_id": "diffusion",
+    "auxiliary": {
+      "sentinel1": true,
+      "sentinel2": true,
+      "temporalRef": true,
+      "dem": true,
+      "cloudMask": true
+    }
+  },
+  "result": {
+    "message": "Cloud removal completed successfully",
+    "optical_filename": "demo_image_for_evaluation.png",
+    "sar_filename": "demo_image_for_evaluation.png",
+    "model_id": "diffusion",
+    "metric_mode": "estimated",
+    "metrics": {
+      "ssim": 0.994,
+      "psnr": 25.91,
+      "sam": 4.85,
+      "fidelity": 100.0
+    },
+    "cloud_coverage": 84.83,
+    "output_filename": "fc296e076b1e4a79b61c61fdffa02d66_reconstructed.png",
+    "preview_filename": "fc296e076b1e4a79b61c61fdffa02d66_preview.png",
+    "download_url": "/api/results/fc296e076b1e4a79b61c61fdffa02d66/download",
+    "preview_url": "/api/results/fc296e076b1e4a79b61c61fdffa02d66/preview",
+    "job_id": "fc296e076b1e4a79b61c61fdffa02d66",
+    "stages": [
+      "uploading",
+      "preprocessing",
+      "inference",
+      "postprocessing",
+      "complete"
+    ],
+    "notes": [
+      "Cloud coverage estimated at 84.8%",
+      "Auxiliary Sentinel-1 fusion enabled",
+      "Local open-source reconstruction path executed without external paid APIs"
+    ],
+    "auxiliary": {
+      "sentinel1": true,
+      "sentinel2": true,
+      "temporalRef": true,
+      "dem": true,
+      "cloudMask": true
+    },
+    "extra": {
+      "artifact_directory": "D:\\Education\\my project\\Github Repo\\skysweep-ai\\backend\\storage\\results\\fc296e076b1e4a79b61c61fdffa02d66",
+      "geometry": "image",
+      "tech_stack": [
+        {
+          "category": "Deep Learning",
+          "items": [
+            "PyTorch",
+            "torchvision",
+            "NumPy"
+          ]
+        },
+        {
+          "category": "Geospatial",
+          "items": [
+            "GDAL",
+            "Rasterio",
+            "QGIS"
+          ]
+        },
+        {
+          "category": "Processing",
+          "items": [
+            "OpenCV",
+            "NumPy",
+            "Scikit-image"
+          ]
+        },
+        {
+          "category": "Deployment",
+          "items": [
+            "FastAPI",
+            "Next.js",
+            "Vercel",
+            "Docker"
+          ]
+        }
+      ]
+    }
+  }
+}

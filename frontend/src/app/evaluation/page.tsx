@@ -1,25 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ComparisonViewer from '@/components/ComparisonViewer';
 import MetricCard from '@/components/MetricCard';
-import { MODELS } from '@/lib/constants';
-
-type ModelId = (typeof MODELS)[number]['id'];
-
-const QUALITATIVE_SAMPLES = [
-  { region: 'Assam — Brahmaputra Floodplain', cloudCover: '34%', improvement: 'High' },
-  { region: 'Meghalaya — Khasi Hills', cloudCover: '52%', improvement: 'Very High' },
-  { region: 'Arunachal — Himalayan Foothills', cloudCover: '41%', improvement: 'High' },
-  { region: 'Nagaland — Forest Canopy', cloudCover: '28%', improvement: 'Moderate' },
-];
+import { fetchEvaluationSamples, fetchModels } from '@/lib/api';
+import type { EvaluationSample, ModelInfo } from '@/lib/types';
 
 export default function EvaluationPage() {
-  const [selectedModel, setSelectedModel] = useState<ModelId>(MODELS[0].id);
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [samples, setSamples] = useState<EvaluationSample[]>([]);
+  const [selectedModel, setSelectedModel] = useState('');
   const [viewMode, setViewMode] = useState<'slider' | 'split'>('slider');
   const [sliderPosition, setSliderPosition] = useState(50);
 
-  const model = MODELS.find((m) => m.id === selectedModel)!;
+  useEffect(() => {
+    Promise.all([fetchModels(), fetchEvaluationSamples()])
+      .then(([loadedModels, loadedSamples]) => {
+        setModels(loadedModels);
+        setSamples(loadedSamples);
+        setSelectedModel((current) => current || loadedModels[0]?.id || '');
+      })
+      .catch(() => {
+        setModels([]);
+        setSamples([]);
+      });
+  }, []);
+
+  const model = models.find((m) => m.id === selectedModel) ?? models[0] ?? null;
 
   return (
     <div className="relative min-h-[calc(100vh-8rem)]">
@@ -36,7 +43,7 @@ export default function EvaluationPage() {
 
         {/* Model selector */}
         <div className="mb-8 flex flex-wrap gap-2">
-          {MODELS.map((m) => (
+          {models.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -55,16 +62,22 @@ export default function EvaluationPage() {
 
         {/* Metrics grid */}
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <MetricCard label="SSIM" value={model.ssim} accent="emerald" sublabel="Structural Similarity Index" />
-          <MetricCard label="PSNR" value={model.psnr} unit="dB" accent="teal" sublabel="Peak Signal-to-Noise Ratio" />
-          <MetricCard label="SAM" value={model.sam} unit="°" accent="cyan" sublabel="Spectral Angle Mapper" />
+          {model ? (
+            <>
+              <MetricCard label="SSIM" value={model.quality.ssim} accent="emerald" sublabel="Structural Similarity Index" />
+              <MetricCard label="PSNR" value={model.quality.psnr} unit="dB" accent="teal" sublabel="Peak Signal-to-Noise Ratio" />
+              <MetricCard label="SAM" value={model.quality.sam} unit="°" accent="cyan" sublabel="Spectral Angle Mapper" />
+            </>
+          ) : (
+            <MetricCard label="Model" value="Loading" accent="emerald" sublabel="Fetching backend catalog" />
+          )}
           <MetricCard label="RMSE" value="0.024" accent="violet" sublabel="Reflectance Error" />
         </div>
 
         {/* Visual comparison */}
         <div className="glass-card mb-8 rounded-2xl p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-bold">Visual Comparison — {model.name}</h2>
+            <h2 className="text-sm font-bold">Visual Comparison — {model?.name ?? 'Loading...'}</h2>
             <div className="flex rounded-lg border border-emerald-900/30 bg-[#0a110d]/60 p-1 text-xs">
               <button
                 type="button"
@@ -82,11 +95,11 @@ export default function EvaluationPage() {
               </button>
             </div>
           </div>
-          <ComparisonViewer
-            viewMode={viewMode}
-            sliderPosition={sliderPosition}
-            onSliderChange={setSliderPosition}
-          />
+              <ComparisonViewer
+                viewMode={viewMode}
+                sliderPosition={sliderPosition}
+                onSliderChange={setSliderPosition}
+              />
         </div>
 
         {/* Qualitative assessment table */}
@@ -104,7 +117,7 @@ export default function EvaluationPage() {
                 </tr>
               </thead>
               <tbody>
-                {QUALITATIVE_SAMPLES.map((s) => (
+                {samples.map((s) => (
                   <tr key={s.region} className="border-b border-emerald-900/20">
                     <td className="py-4 font-semibold text-emerald-100">{s.region}</td>
                     <td className="py-4 font-mono text-emerald-100/60">{s.cloudCover}</td>

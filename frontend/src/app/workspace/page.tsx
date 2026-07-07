@@ -4,22 +4,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ComparisonViewer from '@/components/ComparisonViewer';
 import MetricCard from '@/components/MetricCard';
 import ProcessingPipeline from '@/components/ProcessingPipeline';
-import { checkApiHealth, getDemoMetrics, reconstructImage } from '@/lib/api';
-import { MODELS } from '@/lib/constants';
-import type { AuxiliaryConfig, ProcessingStage, UploadedFileInfo, ViewMode } from '@/lib/types';
-
-type ModelId = (typeof MODELS)[number]['id'];
+import { checkApiHealth, fetchBackendCatalog, reconstructImage } from '@/lib/api';
+import type { AuxiliaryConfig, BackendCatalog, MetricSet, ProcessingStage, UploadedFileInfo, ViewMode } from '@/lib/types';
 
 export default function WorkspacePage() {
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [selectedModel, setSelectedModel] = useState<ModelId>(MODELS[0].id);
+  const [catalog, setCatalog] = useState<BackendCatalog | null>(null);
+  const [selectedModel, setSelectedModel] = useState('');
   const [opticalFile, setOpticalFile] = useState<UploadedFileInfo | null>(null);
   const [sarFile, setSarFile] = useState<UploadedFileInfo | null>(null);
   const [stage, setStage] = useState<ProcessingStage>('idle');
   const [viewMode, setViewMode] = useState<ViewMode>('slider');
   const [sliderPosition, setSliderPosition] = useState(50);
   const [apiOnline, setApiOnline] = useState(false);
-  const [metrics, setMetrics] = useState(getDemoMetrics(MODELS[0].id));
+  const [metrics, setMetrics] = useState<MetricSet | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [inputPreviewUrl, setInputPreviewUrl] = useState<string | null>(null);
   const [auxiliary, setAuxiliary] = useState<AuxiliaryConfig>({
     sentinel1: true,
     sentinel2: false,
@@ -34,11 +35,25 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     checkApiHealth().then(setApiOnline);
+    fetchBackendCatalog().then((loaded) => {
+      setCatalog(loaded);
+      setSelectedModel((current) => current || loaded.models[0]?.id || '');
+    }).catch(() => setCatalog(null));
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (inputPreviewUrl) URL.revokeObjectURL(inputPreviewUrl);
+    };
+  }, [inputPreviewUrl]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>, setter: (f: UploadedFileInfo | null) => void) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (setter === setOpticalFile) {
+        if (inputPreviewUrl) URL.revokeObjectURL(inputPreviewUrl);
+        setInputPreviewUrl(URL.createObjectURL(file));
+      }
       setter({ name: file.name, sizeMB: (file.size / (1024 * 1024)).toFixed(2), file });
     }
   };
@@ -54,20 +69,31 @@ export default function WorkspacePage() {
 
     try {
       if (apiOnline) {
-        await reconstructImage(opticalFile.file, sarFile?.file, selectedModel);
+        const result = await reconstructImage(opticalFile.file, sarFile?.file, selectedModel, auxiliary);
+        setMetrics(result.metrics);
+        setPreviewUrl(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000'}${result.preview_url}`);
+        setDownloadUrl(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000'}${result.download_url}`);
+        return;
       }
     } catch {
       /* demo mode fallback */
     }
 
-    setMetrics(getDemoMetrics(selectedModel));
-  }, [opticalFile, sarFile, selectedModel, apiOnline]);
+    if (catalog) {
+      const fallback = catalog.models.find((m) => m.id === selectedModel);
+      setMetrics(fallback?.quality ?? null);
+    }
+  }, [opticalFile, sarFile, selectedModel, apiOnline, auxiliary, catalog]);
 
   const reset = () => {
     setOpticalFile(null);
     setSarFile(null);
     setStage('idle');
-    setMetrics(getDemoMetrics(selectedModel));
+    setMetrics(null);
+    setPreviewUrl(null);
+    setDownloadUrl(null);
+    if (inputPreviewUrl) URL.revokeObjectURL(inputPreviewUrl);
+    setInputPreviewUrl(null);
     [opticalRef, sarRef, s2Ref].forEach((r) => {
       if (r.current) r.current.value = '';
     });
@@ -75,7 +101,8 @@ export default function WorkspacePage() {
 
   const isProcessing = stage !== 'idle' && stage !== 'complete';
   const isComplete = stage === 'complete';
-  const selectedModelData = MODELS.find((m) => m.id === selectedModel)!;
+  const models = catalog?.models ?? [];
+  const selectedModelData = models.find((m) => m.id === selectedModel) ?? models[0] ?? null;
 
   const card = isDarkMode ? 'glass-card' : 'bg-white/80 border-slate-200 backdrop-blur-xl shadow-xl border';
   const input = isDarkMode
@@ -181,16 +208,16 @@ export default function WorkspacePage() {
               <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-emerald-500">3 · GenAI Architecture</h2>
               <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value as ModelId)}
+                onChange={(e) => setSelectedModel(e.target.value)}
                 className={`w-full rounded-lg border p-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 ${input}`}
               >
-                {MODELS.map((m) => (
+                {models.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name} — {m.tagline}
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-[10px] leading-relaxed text-emerald-100/40">{selectedModelData.description}</p>
+              <p className="mt-2 text-[10px] leading-relaxed text-emerald-100/40">{selectedModelData?.description ?? 'Loading backend model catalog...'}</p>
             </section>
 
             {/* Actions */}
@@ -231,7 +258,7 @@ export default function WorkspacePage() {
           <main className={`flex flex-1 flex-col rounded-2xl p-6 ${card}`}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-bold">Spatial Render Canvas</h3>
-              {isComplete && (
+                {isComplete && (
                 <div className="flex rounded-lg border border-emerald-900/30 bg-[#0a110d]/60 p-1 text-xs">
                   <button
                     type="button"
@@ -266,11 +293,11 @@ export default function WorkspacePage() {
               )}
 
               {opticalFile && stage === 'idle' && (
-                <ReadyState model={selectedModelData.name} auxiliary={auxiliary} />
+                <PendingResultState model={selectedModelData?.name ?? 'Selected model'} auxiliary={auxiliary} />
               )}
 
               {isProcessing && (
-                <ProcessingState stage={stage} model={selectedModelData.name} />
+                <ProcessingState stage={stage} model={selectedModelData?.name ?? 'Selected model'} />
               )}
 
               {isComplete && (
@@ -280,13 +307,29 @@ export default function WorkspacePage() {
                     sliderPosition={sliderPosition}
                     onSliderChange={setSliderPosition}
                     isDarkMode={isDarkMode}
+                    beforeImageUrl={inputPreviewUrl}
+                    afterImageUrl={previewUrl}
                   />
                   <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
-                    <MetricCard label="SSIM" value={metrics.ssim} accent="emerald" sublabel="Structural Similarity" />
-                    <MetricCard label="PSNR" value={metrics.psnr} unit="dB" accent="teal" sublabel="Peak Signal-to-Noise" />
-                    <MetricCard label="SAM" value={metrics.sam} unit="°" accent="cyan" sublabel="Spectral Angle Mapper" />
-                    <MetricCard label="Fidelity" value={`${metrics.fidelity}%`} accent="violet" sublabel="Geographic Accuracy" />
+                    {metrics ? (
+                      <>
+                        <MetricCard label="SSIM" value={metrics.ssim} accent="emerald" sublabel="Structural Similarity" />
+                        <MetricCard label="PSNR" value={metrics.psnr} unit="dB" accent="teal" sublabel="Peak Signal-to-Noise" />
+                        <MetricCard label="SAM" value={metrics.sam} unit="°" accent="cyan" sublabel="Spectral Angle Mapper" />
+                        <MetricCard label="Fidelity" value={`${metrics.fidelity}%`} accent="violet" sublabel="Geographic Accuracy" />
+                      </>
+                    ) : (
+                      <MetricCard label="Result" value="Pending" accent="emerald" sublabel="Run reconstruction to fetch backend metrics" />
+                    )}
                   </div>
+                  {downloadUrl && (
+                    <a
+                      href={downloadUrl}
+                      className="rounded-full border border-emerald-500/30 px-4 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/10"
+                    >
+                      Download Backend Output
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -347,22 +390,37 @@ function EmptyState({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function ReadyState({ model, auxiliary }: { model: string; auxiliary: AuxiliaryConfig }) {
+function PendingResultState({ model, auxiliary }: { model: string; auxiliary: AuxiliaryConfig }) {
   const activeAux = Object.entries(auxiliary).filter(([, v]) => v).map(([k]) => k);
   return (
     <div className="max-w-sm text-center">
-      <div className="relative mx-auto mb-5 h-20 w-20">
-        <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
-        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400">
-          <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
+      <div className="relative mx-auto mb-5 h-24 w-24">
+        <div className="absolute inset-0 rounded-full border border-emerald-500/20 bg-emerald-500/10" />
+        <div className="absolute inset-0 animate-spin rounded-full border-4 border-t-emerald-500 border-r-transparent border-b-emerald-500/20 border-l-transparent" />
+        <div className="absolute inset-3 animate-pulse rounded-full bg-emerald-500/10" />
+        <div className="absolute inset-6 rounded-full border border-emerald-400/40 bg-[#050806]/80" />
       </div>
-      <h4 className="text-lg font-bold">Ready for Inference</h4>
-      <div className="mt-4 rounded-lg border border-emerald-900/30 bg-black/20 p-3 text-left text-xs">
-        <p className="text-emerald-100/50">Model: <span className="font-mono font-bold text-emerald-400">{model}</span></p>
+      <h4 className="text-lg font-bold">Waiting for Backend Result</h4>
+      <p className="mt-2 text-sm text-emerald-100/50">
+        The uploaded scene is queued for reconstruction. The backend will return the processed image preview here.
+      </p>
+      <div className="mt-4 overflow-hidden rounded-lg border border-emerald-900/30 bg-black/20 p-3 text-left text-xs">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-emerald-100/50">Model</span>
+          <span className="font-mono font-bold text-emerald-400">{model}</span>
+        </div>
         <p className="mt-1 text-emerald-100/50">Fusion: <span className="text-emerald-300">{activeAux.join(', ') || 'none'}</span></p>
+        <div className="mt-4 space-y-2">
+          <div className="h-2 overflow-hidden rounded-full bg-emerald-900/40">
+            <div className="h-full w-2/3 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400" />
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-emerald-900/40">
+            <div className="h-full w-1/2 animate-[pulse_1.6s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-emerald-500" />
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-emerald-900/40">
+            <div className="h-full w-3/4 animate-[pulse_1.4s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-teal-500 via-cyan-400 to-emerald-400" />
+          </div>
+        </div>
       </div>
     </div>
   );

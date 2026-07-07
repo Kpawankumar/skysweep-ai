@@ -1,10 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { DATASETS, PREPROCESSING_STEPS } from '@/lib/constants';
+import { useEffect, useState } from 'react';
+import { fetchDatasets, fetchPreprocessingSteps } from '@/lib/api';
+import type { DatasetInfo, PreprocessingStep } from '@/lib/types';
 
 export default function PreprocessingPage() {
   const [activeStep, setActiveStep] = useState(3);
+  const [steps, setSteps] = useState<PreprocessingStep[]>([]);
+  const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
+
+  useEffect(() => {
+    Promise.all([fetchPreprocessingSteps(), fetchDatasets()])
+      .then(([loadedSteps, loadedDatasets]) => {
+        setSteps(loadedSteps);
+        setDatasets(loadedDatasets);
+      })
+      .catch(() => {
+        setSteps([]);
+        setDatasets([]);
+      });
+  }, []);
+
+  const stepList = steps.length > 0 ? steps : [];
 
   return (
     <div className="relative min-h-[calc(100vh-8rem)]">
@@ -22,7 +39,7 @@ export default function PreprocessingPage() {
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Pipeline steps */}
           <div className="space-y-3 lg:col-span-1">
-            {PREPROCESSING_STEPS.map((step) => (
+            {stepList.map((step) => (
               <button
                 key={step.id}
                 type="button"
@@ -56,11 +73,11 @@ export default function PreprocessingPage() {
 
           {/* Step detail */}
           <div className="glass-card rounded-2xl p-8 lg:col-span-2">
-            {PREPROCESSING_STEPS.filter((s) => s.id === activeStep).map((step) => (
+            {stepList.filter((s) => s.id === activeStep).map((step) => (
               <div key={step.id}>
                 <div className="mb-6 flex items-center gap-3">
                   <span className="rounded-full bg-emerald-600/20 px-3 py-1 text-xs font-bold text-emerald-400">
-                    Step {step.id} of {PREPROCESSING_STEPS.length}
+                    Step {step.id} of {stepList.length}
                   </span>
                   <span
                     className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${
@@ -101,7 +118,7 @@ export default function PreprocessingPage() {
         <section className="mt-16">
           <h2 className="mb-6 text-xl font-black text-emerald-50">Integrated Datasets</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {DATASETS.map((d) => (
+            {datasets.map((d) => (
               <div key={d.name} className="glass-card rounded-xl p-5 transition-all hover:border-emerald-500/30">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="font-bold text-emerald-100">{d.name}</h3>

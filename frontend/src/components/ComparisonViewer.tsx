@@ -12,6 +12,8 @@ interface ComparisonViewerProps {
   sliderPosition: number;
   onSliderChange: (value: number) => void;
   isDarkMode?: boolean;
+  beforeImageUrl?: string | null;
+  afterImageUrl?: string | null;
 }
 
 export default function ComparisonViewer({
@@ -19,14 +21,19 @@ export default function ComparisonViewer({
   sliderPosition,
   onSliderChange,
   isDarkMode = true,
+  beforeImageUrl,
+  afterImageUrl,
 }: ComparisonViewerProps) {
+  const cloudyImage = beforeImageUrl ?? 'https://images.unsplash.com/photo-1542272201-b1ca555f8505?q=80&w=1200&auto=format&fit=crop';
+  const clearImage = afterImageUrl ?? 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop';
+
   if (viewMode === 'split') {
     return (
       <div className="grid h-full w-full grid-cols-1 gap-4 p-2 lg:grid-cols-2">
         <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${CLOUDY_IMG}')` }}
+            style={{ backgroundImage: `url('${cloudyImage}')` }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-slate-300/90 to-slate-500/80 backdrop-blur-[2px]" />
           <div className="relative flex h-full min-h-[240px] flex-col items-center justify-center p-6">
@@ -41,7 +48,7 @@ export default function ComparisonViewer({
         <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 shadow-[0_0_40px_rgba(16,185,129,0.15)]">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${CLEAR_IMG}')` }}
+            style={{ backgroundImage: `url('${clearImage}')` }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/50 to-[#0a140f]/70 mix-blend-multiply" />
           <div className="relative flex h-full min-h-[240px] flex-col items-center justify-center p-6">
@@ -65,7 +72,7 @@ export default function ComparisonViewer({
     >
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('${CLEAR_IMG}')` }}
+        style={{ backgroundImage: `url('${clearImage}')` }}
       >
         <div className="absolute inset-0 bg-gradient-to-tr from-emerald-950/80 via-emerald-900/60 to-[#0a140f]/80" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -84,7 +91,7 @@ export default function ComparisonViewer({
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('${CLOUDY_IMG}')`, width: `${100 / (sliderPosition / 100 || 1)}%` }}
+          style={{ backgroundImage: `url('${cloudyImage}')`, width: `${100 / (sliderPosition / 100 || 1)}%` }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-200/95 to-slate-400/90" />
         <div className="absolute inset-0 flex items-center justify-center">

@@ -1,5 +1,15 @@
 import { API_BASE } from './constants';
-import type { ReconstructionResult } from './types';
+import type {
+  AuxiliaryConfig,
+  BackendCatalog,
+  DatasetInfo,
+  EvaluationSample,
+  MetricSet,
+  ModelInfo,
+  PreprocessingStep,
+  ReconstructionResult,
+  WorkflowPhase,
+} from './types';
 
 export async function checkApiHealth(): Promise<boolean> {
   try {
@@ -14,11 +24,21 @@ export async function reconstructImage(
   optical: File,
   sar?: File | null,
   modelId?: string,
+  auxiliary?: Partial<AuxiliaryConfig>,
+  reference?: File | null,
 ): Promise<ReconstructionResult> {
   const form = new FormData();
   form.append('optical_image', optical);
   if (sar) form.append('sar_image', sar);
   if (modelId) form.append('model_id', modelId);
+  if (reference) form.append('reference_image', reference);
+  if (auxiliary) {
+    form.append('sentinel1', String(auxiliary.sentinel1 ?? true));
+    form.append('sentinel2', String(auxiliary.sentinel2 ?? false));
+    form.append('temporalRef', String(auxiliary.temporalRef ?? false));
+    form.append('dem', String(auxiliary.dem ?? false));
+    form.append('cloudMask', String(auxiliary.cloudMask ?? true));
+  }
 
   const res = await fetch(`${API_BASE}/api/reconstruct`, {
     method: 'POST',
@@ -32,14 +52,48 @@ export async function reconstructImage(
   return res.json();
 }
 
-export function getDemoMetrics(modelId: string) {
-  const metrics: Record<string, { ssim: number; psnr: number; sam: number; fidelity: number }> = {
-    'swin-transformer': { ssim: 0.942, psnr: 28.45, sam: 4.2, fidelity: 98.2 },
-    'hybrid-cgan': { ssim: 0.918, psnr: 26.82, sam: 5.1, fidelity: 96.4 },
-    pix2pix: { ssim: 0.901, psnr: 25.67, sam: 5.8, fidelity: 94.8 },
-    cyclegan: { ssim: 0.887, psnr: 24.91, sam: 6.4, fidelity: 93.1 },
-    'unet-attention': { ssim: 0.876, psnr: 24.12, sam: 6.9, fidelity: 91.5 },
-    diffusion: { ssim: 0.951, psnr: 29.18, sam: 3.6, fidelity: 99.1 },
-  };
-  return metrics[modelId] ?? metrics['swin-transformer'];
+export async function fetchBackendCatalog(): Promise<BackendCatalog> {
+  const res = await fetch(`${API_BASE}/api/catalog`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchModels(): Promise<ModelInfo[]> {
+  const res = await fetch(`${API_BASE}/api/models`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchDatasets(): Promise<DatasetInfo[]> {
+  const res = await fetch(`${API_BASE}/api/datasets`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPreprocessingSteps(): Promise<PreprocessingStep[]> {
+  const res = await fetch(`${API_BASE}/api/preprocessing`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchWorkflowPhases(): Promise<WorkflowPhase[]> {
+  const res = await fetch(`${API_BASE}/api/workflow`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchEvaluationSamples(): Promise<EvaluationSample[]> {
+  const res = await fetch(`${API_BASE}/api/evaluation/samples`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchModelMetrics(modelId: string): Promise<MetricSet> {
+  const res = await fetch(`${API_BASE}/api/metrics/${modelId}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
 }

@@ -1,5 +1,10 @@
+"use client";
+
 import Link from 'next/link';
-import { PROJECT, MODELS, DATASETS } from '@/lib/constants';
+import { useEffect, useState } from 'react';
+import { fetchBackendCatalog } from '@/lib/api';
+import { PROJECT } from '@/lib/constants';
+import type { BackendCatalog } from '@/lib/types';
 
 const OUTCOMES = [
   'Automated cloud-free reconstruction of LISS-IV imagery',
@@ -44,6 +49,15 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const [catalog, setCatalog] = useState<BackendCatalog | null>(null);
+
+  useEffect(() => {
+    fetchBackendCatalog().then(setCatalog).catch(() => setCatalog(null));
+  }, []);
+
+  const models = catalog?.models ?? [];
+  const datasets = catalog?.datasets ?? [];
+
   return (
     <div className="relative overflow-hidden">
       {/* Hero */}
@@ -203,7 +217,7 @@ export default function HomePage() {
                 </tr>
               </thead>
               <tbody>
-                {DATASETS.map((d, i) => (
+                {datasets.map((d, i) => (
                   <tr key={d.name} className={`border-b border-emerald-900/20 ${i % 2 === 0 ? 'bg-[#0a110d]' : 'bg-[#0d1610]'}`}>
                     <td className="px-6 py-4 font-semibold text-emerald-100">{d.name}</td>
                     <td className="px-6 py-4 text-emerald-100/60">{d.source}</td>
@@ -244,8 +258,8 @@ export default function HomePage() {
             <div className="glass-card rounded-2xl p-8">
               <p className="mb-4 text-xs font-bold uppercase tracking-widest text-emerald-500">Top Performing Models</p>
               <div className="space-y-4">
-                {[...MODELS]
-                  .sort((a, b) => b.ssim - a.ssim)
+                {[...models]
+                  .sort((a, b) => b.quality.ssim - a.quality.ssim)
                   .slice(0, 4)
                   .map((m, i) => (
                     <div key={m.id} className="flex items-center gap-4">
@@ -253,12 +267,12 @@ export default function HomePage() {
                       <div className="flex-1">
                         <div className="mb-1 flex justify-between text-xs">
                           <span className="font-semibold text-emerald-100">{m.name}</span>
-                          <span className="font-mono text-emerald-400">SSIM {m.ssim}</span>
+                          <span className="font-mono text-emerald-400">SSIM {m.quality.ssim}</span>
                         </div>
                         <div className="h-1.5 overflow-hidden rounded-full bg-emerald-900/40">
                           <div
                             className="h-full rounded-full transition-all"
-                            style={{ width: `${m.ssim * 100}%`, backgroundColor: m.color }}
+                            style={{ width: `${m.quality.ssim * 100}%`, backgroundColor: m.color }}
                           />
                         </div>
                       </div>
